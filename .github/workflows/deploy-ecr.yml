@@ -28,7 +28,6 @@ jobs:
         ECR_REPOSITORY: clo835-assignment1
         IMAGE_TAG: mysql-${{ github.run_number }}  # Dynamic tagging using run number
       run: |
-        cd ../
         echo "Building and pushing MySQL Image..."
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f Dockerfile_mysql .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
@@ -40,7 +39,6 @@ jobs:
         ECR_REPOSITORY: clo835-assignment1
         IMAGE_TAG: webapp-${{ github.run_number }}  # Dynamic tagging using run number
       run: |
-        cd ../
         echo "Building and pushing WebAPP Image..."
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f Dockerfile .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
