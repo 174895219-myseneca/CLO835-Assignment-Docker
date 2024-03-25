@@ -1,26 +1,67 @@
-# Install the required MySQL package
+# Setting Up a MySQL Database with Docker on Amazon EC2
 
-sudo apt-get update -y
-sudo apt-get install mysql-client -y
+This guide outlines the steps to configure and launch a MySQL database container on an Amazon EC2 instance using Docker.
 
-# Running application locally
-pip3 install -r requirements.txt
-sudo python3 app.py
-# Building and running 2 tier web application locally
-### Building mysql docker image 
-```docker build -t my_db -f Dockerfile_mysql . ```
+## Prerequisites
 
-### Building application docker image 
-```docker build -t my_app -f Dockerfile . ```
+- An Amazon EC2 instance with Amazon Linux.
+- Administrative access to the EC2 instance.
 
-### Running mysql
-```docker run -d -e MYSQL_ROOT_PASSWORD=pw  my_db```
+## Instructions
+
+### Verify Docker service status
+
+Note: Docker has already been installed and the user has been added to the Docker group using custom data. See the custom data script here: [custom data](./terraform/install_docker.sh).
+
+```shell
+systemctl status docker
+```
+
+### Login to Amazon ECR
+
+Replace `us-east-1` with your region:
+
+```shell
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin
+```
+
+### Create Docker network
+
+```Bash
+docker network create -d bridge --subnet .../24 --gateway <IPAddress> new-network
+```
+
+### Launch MySQL container
+
+Replace `"pw"` with a strong password:
+
+```Bash
+docker run --network new-network -d -e MYSQL_ROOT_PASSWORD=pw --name my_sql_db <your_db_uri>
+```
+
+### List running containers
+
+```Bash
+docker ps
+```
+
+## Running a 2-Tier Web Application Using ECR
+
+### Running MySQL
+
+```shell
+docker run --network new-network -d -e MYSQL_ROOT_PASSWORD=pw --name my_sql_db <your_db_uri>
+```
 
 ### Get the IP of the database and export it as DBHOST variable
-```docker inspect <container_id>```
 
-### Example when running DB runs as a docker container and app is running locally
+```shell
+docker inspect <container_id>
 ```
+
+### Example when running DB runs as a Docker container and app is running locally
+
+```shell
 export DBHOST=172.17.0.2
 export DBPORT=3306
 export DBUSER=root
@@ -28,5 +69,9 @@ export DATABASE=employees
 export DBPWD=pw
 export APP_COLOR=blue
 ```
-### Run the application, make sure it is visible in the browser
-```docker run -p 8080:8080  -e DBHOST=$DBHOST -e DBPORT=$DBPORT -e  DBUSER=$DBUSER -e DBPWD=$DBPWD -e DATABASE=$DATABASE -e APP_COLOR=$APP_COLOR  my_app```
+
+### Run the application, ensuring it is visible in the browser
+
+```shell
+docker run -p 8081:8080 --network new-network  -e APP_COLOR=blue -e DBHOST=$DBHOST -e DBPWD=$DBPWD -e DBPORT=$DBPORT -e DBUSER=$DBUSER --name blue --link my_sql_db:mysql_db -d <your_webapp_uri>
+```
