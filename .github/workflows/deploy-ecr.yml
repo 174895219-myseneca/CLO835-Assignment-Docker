@@ -9,8 +9,13 @@ jobs:
     name: Build and Push Images
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: aws-actions/amazon-ecr-login@v1
+    
+      - name: Check out code
+        uses: actions/checkout@v2
+  
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -23,8 +28,8 @@ jobs:
           echo "MYSQL_IMAGE_TAG: $MYSQL_IMAGE_TAG"
           echo "WEBAPP_IMAGE_TAG: $WEBAPP_IMAGE_TAG"
       - run: |
-          docker build -t $ECR_REGISTRY/clo835-assignment1-ecr:mysql-$MYSQL_IMAGE_TAG -f Dockerfile_mysql .
-          docker push $ECR_REGISTRY/clo835-assignment1-ecr:mysql-$MYSQL_IMAGE_TAG
+          docker build -t $ECR_REGISTRY/clo835-assignment1:mysql-$MYSQL_IMAGE_TAG -f Dockerfile_mysql .
+          docker push $ECR_REGISTRY/clo835-assignment1:mysql-$MYSQL_IMAGE_TAG
       - run: |
           export DBHOST=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' mysql)
-          docker push $ECR_REGISTRY/clo835-assignment1-ecr:webapp-$WEBAPP_IMAGE_TAG
+          docker push $ECR_REGISTRY/clo835-assignment1:webapp-$WEBAPP_IMAGE_TAG
